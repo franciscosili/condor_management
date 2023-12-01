@@ -71,6 +71,12 @@ class condor_manager:
 
         self.dagfile_content = ''
 
+        current_file_dir = os.path.dirname(__file__)
+        with open(f'{current_file_dir}/templates/job_condor_TEMPLATE.sh', 'r') as inf:
+            self.content_sh = inf.read()
+        with open(f'{current_file_dir}/templates/condor_submit_TEMPLATE.sub', 'r') as inf:
+            self.content_sub = inf.read()
+
         return
     # ==============================================================================================
     
@@ -106,16 +112,6 @@ class condor_manager:
     # ==============================================================================================
     def add_subdir_in_logs(self, subdirname):
         return mkdirp(f'{self.condor_output_path}/{subdirname}')
-    # ==============================================================================================
-    
-    # ==============================================================================================
-    def setup_contents(self, ):
-        current_file_dir = os.path.dirname(__file__)
-        with open(f'{current_file_dir}/templates/job_condor_TEMPLATE.sh', 'r') as inf:
-            self.content_sh = inf.read()
-        with open(f'{current_file_dir}/templates/condor_submit_TEMPLATE.sub', 'r') as inf:
-            self.content_sub = inf.read()
-        return
     # ==============================================================================================
     
     # ==============================================================================================
