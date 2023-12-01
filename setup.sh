@@ -1,0 +1,3 @@
+
+_DIRCONDOR=$PWD
+export PATH=$_DIRCONDOR:$PATH

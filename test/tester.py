@@ -1,6 +1,6 @@
 import argparse
-from condor_base import condor_manager
-from utils import mkdirp
+from lib.condor_base import condor_manager
+from ..lib.utils import mkdirp
 from itertools import product
 
 
