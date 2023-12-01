@@ -1,3 +1,5 @@
+#! /usr/bin/python3
+
 import argparse
 from lib.condor_base import condor_manager
 from ..lib.utils import mkdirp
