@@ -8,6 +8,7 @@ class condor_manager:
     def __init__(self,
                  tag                  : str,
                  flavour              : str,
+                 cmd                  : str,
                  cpus                 : int,
                  ram                  : int,
                  logs_dirname         : str,
@@ -16,15 +17,12 @@ class condor_manager:
                  general_path_results : str,
                  use_dag              : bool = True):
         
-        if flavour not in jobflavours:
-            print(f'Error: wrong job flavour entered. Options: {jobflavours}')
-            sys.exit(1)
-
 
         self.tag         = tag
         self.flavour     = flavour
         self.cpus        = cpus
         self.ram         = ram
+        self.cmd         = cmd
         self.now         = datetime.now().strftime("%Y-%m-%d_%H-%M")
         self.current_tag = f'{self.tag}__{self.now}'
 
@@ -71,11 +69,6 @@ class condor_manager:
 
         self.dagfile_content = ''
 
-        current_file_dir = os.path.dirname(__file__)
-        with open(f'{current_file_dir}/templates/job_condor_TEMPLATE.sh', 'r') as inf:
-            self.content_sh = inf.read()
-        with open(f'{current_file_dir}/templates/condor_submit_TEMPLATE.sub', 'r') as inf:
-            self.content_sub = inf.read()
 
         return
     # ==============================================================================================
@@ -102,6 +95,14 @@ class condor_manager:
     def exclude_dirs(self, excluded_dirs):
         self.excluded_dirs = excluded_dirs
         return
+    # ==============================================================================================
+    
+    # ==============================================================================================
+    def setup_contents(self, inputpath):
+        with open(f'{inputpath}/templates/job_condor_TEMPLATE.sh', 'r') as inf:
+            self.content_sh = inf.read()
+        with open(f'{inputpath}/templates/condor_submit_TEMPLATE.sub', 'r') as inf:
+            self.content_sub = inf.read()
     # ==============================================================================================
     
     # ==============================================================================================
@@ -177,7 +178,7 @@ class condor_manager:
         # ------------------------------------------------------------------------------------------
         # DAG FILE
         # ------------------------------------------------------------------------------------------
-        self.dag_file_contents += f'JOB {extra_tag if extra_tag else self.tag} {condor_submit_filename} DIR {rel_path_dag_submits}\n'
+        self.dagfile_content += f'JOB {extra_tag if extra_tag else self.tag} {condor_submit_filename} DIR {rel_path_dag_submits}\n'
         # ------------------------------------------------------------------------------------------
         # ------------------------------------------------------------------------------------------
 
@@ -187,7 +188,7 @@ class condor_manager:
     # ==============================================================================================
     def save_dag(self):
         with open(self.dagfile, 'w') as outdag:
-            outdag.write(self.dag_file_contents)
+            outdag.write(self.dagfile_content)
         return
     # ==============================================================================================
 # ==================================================================================================

@@ -28,7 +28,7 @@ def get_filename_path(filename):
 def replace_in_string(input_str, output, replace_list_tuple):
     content = input_str
     for this_tuple in replace_list_tuple:
-        content = content.replace(*this_tuple)
+        content = content.replace(str(this_tuple[0]), str(this_tuple[1]))
     with open(output, 'w') as out:
         out.write(content)
     return
