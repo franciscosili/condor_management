@@ -1,0 +1,28 @@
+Executable      =   EXECUTABLE
+Log             =   OUTPATHoutput.log
+Error           =   OUTPATHoutput.err
+Output          =   OUTPATHoutput.out
+universe        =   vanilla
++JobFlavour     =   "FLAVOUR"
+
+# the following line is not necessary, but please specify it and only as much as you need
+request_cpus    =   CPUS
+
+# the following line is not necessary, but please specify it and only as much as you need
+request_memory  =   RAMGB
+
+
+
+# the following line is not necessary, only if you want to be notified; why wouldn't you?!
+# when you want to be notified
+notification    =   Complete
+notify_user     =   francisco.sili@cern.ch
+
+
+
+# to retry jobs
+requirements   = (OpSysAndVer =?= "AlmaLinux9") && (Machine =!= LastRemoteHost)
+on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
+max_retries    = 5
+
+Queue
