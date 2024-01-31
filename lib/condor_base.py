@@ -14,9 +14,35 @@ class condor_manager:
                  logs_dirname         : str,
                  path_eos_file        : str,
                  path_results         : str,
-                 general_path_results : str,
+                 versions_path_results : str,
                  use_dag              : bool = True):
-        
+        """
+        The general case for paths will be given with this example
+        /eos/home-f/fsili/code/local/Resonances/code/PJA/photonjetanalysis/run/results/samples__v29_0/results_v0/jfakes/jfakes_v1/2-template_fits
+
+        path_eos_file: From this path, the name of the project will be guessed. It has several functions:
+            - path where the final copy of results will be done.
+            - path which will be used to know which files will be copied to condor
+        versions_path_results: This is a continuation of versions making up the final version of the calculation.
+            From the first output folder, these directories come, combining different versions of calculations,
+            samples, etc. These are simply of the form:
+                'samples_vX/results_vY/histograms_vZ'
+
+        From the example,
+        path_results = run/results
+                
+        Args:
+            tag                   (str): extra tag to put to filenames and to the jobs
+            flavour               (str): flavour of the condor job
+            cmd                   (str): command to execute inside the .sh file that will be submitted
+            cpus                  (int): number of CPUs to use
+            ram                   (int): amount of RAM needed
+            logs_dirname          (str): _description_
+            path_eos_file         (str): path to .txt file containing a path to EOS where the original project is. 
+            path_results          (str): Path between project name and where versions_path_results is
+            versions_path_results (str): path indicating versions
+            use_dag               (bool, optional): Whether to use dags or simple condor submits. Defaults to True.
+        """
 
         self.tag         = tag
         self.flavour     = flavour
@@ -30,24 +56,32 @@ class condor_manager:
         self.dag_addon   = 'dags' if self.use_dag else 'standalone'
         
 
+        # self.path_eos, from the given example path, is
+        #   /eos/home-f/fsili/code/local/Resonances/code/PJA/photonjetanalysis
         with open(path_eos_file, 'r') as f:
             self.path_eos = f.readline().strip('\n')
 
+        # self.project_name is
+        #   photonjetanalysis
         self.project_name = path_eos_file.rsplit('/')[-1]
 
 
-        # this path is given by versions generaly. This will be inside the general path in eios
-        # this is the relative path from where this file is, to the location of the output logs and erorrs
-        # files from condor
-        self.general_path_results = general_path_results
+        # this path is given by versions generaly. This will be inside the general path in eos, self.path_eos
+        # self.versions_path_results is
+        #   samples__v29_0/results_v0/jfakes/jfakes_v1
+        self.versions_path_results = versions_path_results
         
         
-        # where to store results in eos
-        self.results_path         = f'{path_results}/{general_path_results}'
+        # where to store results in eos. From the project directory in eos, this path points directly to the outputs
+        # self.results_path is
+        #   run/results/samples__v29_0/results_v0/jfakes/jfakes_v1
+        self.results_path         = f'{path_results}/{versions_path_results}'
         
         
         # where logs will be saved. It can then contain multiple subdirectories
-        self.condor_output_path = mkdirp(f'{general_path_results}/{logs_dirname}/{self.dag_addon}/{self.current_tag}')
+        # self.condor_output_path is
+        #   samples__v29_0/results_v0/jfakes/jfakes_v1/<logs_dirname>/...
+        self.condor_output_path = mkdirp(f'{versions_path_results}/{logs_dirname}/{self.dag_addon}/{self.current_tag}')
 
 
         # setup executable and condor submit filenames and paths
@@ -66,9 +100,9 @@ class condor_manager:
             self.condor_submit = f'{self.condor_output_path}/{self.condor_submit_filename}'
 
 
-
         self.dagfile_content = ''
 
+        self.setup_contents()
 
         return
     # ==============================================================================================
@@ -98,10 +132,10 @@ class condor_manager:
     # ==============================================================================================
     
     # ==============================================================================================
-    def setup_contents(self, inputpath):
-        with open(f'{inputpath}/templates/job_condor_TEMPLATE.sh', 'r') as inf:
+    def setup_contents(self):
+        with open(f'templates/job_condor_TEMPLATE.sh', 'r') as inf:
             self.content_sh = inf.read()
-        with open(f'{inputpath}/templates/condor_submit_TEMPLATE.sub', 'r') as inf:
+        with open(f'templates/condor_submit_TEMPLATE.sub', 'r') as inf:
             self.content_sub = inf.read()
     # ==============================================================================================
     
@@ -116,11 +150,12 @@ class condor_manager:
     # ==============================================================================================
     
     # ==============================================================================================
-    def create_scripts(self, extra_path='', extra_tag='', extra_cmds=''):
-
+    def create_scripts(self, extra_path='', extra_tag='', extra_cmds='', previous_sh_cmds=''):
 
         submits_logs_dir = self.condor_output_path
+        
         if extra_path:
+            # extra path to add to the logfiles
             submits_logs_dir = self.add_subdir_in_logs(extra_path)
         
 
@@ -151,9 +186,10 @@ class condor_manager:
         shell_filename = f'{submits_logs_dir}/{executable_filename}'
 
         replace_in_string(self.content_sh, shell_filename, [
-            ('CMD_COPY'   , cmd_copy),
-            ('DELETEFILES', cmd_delete),
-            ('CMD'        , f'{self.cmd} --cpus {self.cpus} --copy_out_files {self.path_eos} {extra_cmds}')
+            ('PREVIOUSCOMMANDS', previous_sh_cmds),
+            ('CMD_COPY'        , cmd_copy),
+            ('DELETEFILES'     , cmd_delete),
+            ('CMD'             , f'{self.cmd} --cpus {self.cpus} --copy_out_files {self.path_eos} {extra_cmds}')
         ])
         # ------------------------------------------------------------------------------------------
         # ------------------------------------------------------------------------------------------
