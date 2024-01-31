@@ -1,11 +1,13 @@
-import argparse
+import argparse, os
 from lib.condor_base import condor_manager
-from ..lib.utils import mkdirp
 from itertools import product
 
-
-
-
+# ==================================================================================================`
+def mkdirp(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return path
+# ==================================================================================================`
 
 
 parser = argparse.ArgumentParser()
