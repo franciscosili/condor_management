@@ -6,10 +6,10 @@ universe        =   vanilla
 +JobFlavour     =   "FLAVOUR"
 
 # the following line is not necessary, but please specify it and only as much as you need
-request_cpus    =   CPUS
+CPUS
 
 # the following line is not necessary, but please specify it and only as much as you need
-request_memory  =   RAMGB
+RAM
 
 
 
