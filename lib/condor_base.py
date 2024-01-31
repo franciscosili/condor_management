@@ -93,8 +93,8 @@ class condor_manager:
             self.dagfile       = f'{self.condor_output_path}/{self.dag_filename}'
         else:
             # name of executables and submits files
-            self.executable_filename    = f'{self.executable_filename}.sh'
-            self.condor_submit_filename = f'{self.condor_submit_filename}.sub'
+            self.executable_filename    = f'{self.executable_filename}'
+            self.condor_submit_filename = f'{self.condor_submit_filename}'
 
             self.executable    = f'{self.condor_output_path}/{self.executable_filename}'
             self.condor_submit = f'{self.condor_output_path}/{self.condor_submit_filename}'
@@ -204,11 +204,18 @@ class condor_manager:
         # ------------------------------------------------------------------------------------------
         sub_filename = f'{submits_logs_dir}/{condor_submit_filename}'
 
+        set_cpu = ''
+        set_ram = ''
+        if self.cpus is not None:
+            set_cpu = f'request_cpus    =   {self.cpus}'
+        if self.ram is not None:
+            set_ram = f'request_memory    =   {self.ram}GB'
+
         replace_in_string(self.content_sub, sub_filename, [
             ('EXECUTABLE'  , executable_filename),
             ('OUTPATH'     , ''),
-            ('CPUS'        , self.cpus),
-            ('RAM'         , self.ram),
+            ('CPUS'        , set_cpu),
+            ('RAM'         , set_ram),
             ('FLAVOUR'     , self.flavour),
         ])
         # ------------------------------------------------------------------------------------------
