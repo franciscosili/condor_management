@@ -28,10 +28,13 @@ echo $PWD
 
 ls -la
 #pwd
+
+PREVIOUSCOMMANDS
+
 check_command_success source setup.sh
 
 # command to execute
 check_command_success CMD
 
 # delete files that where copied from the code directory
-check_command_success DELETEFILES
+DELETEFILES
