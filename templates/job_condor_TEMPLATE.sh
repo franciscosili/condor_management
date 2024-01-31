@@ -31,7 +31,7 @@ ls -la
 
 PREVIOUSCOMMANDS
 
-check_command_success source setup.sh
+SETUPCOMMAND
 
 # command to execute
 check_command_success CMD

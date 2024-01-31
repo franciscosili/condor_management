@@ -150,7 +150,7 @@ class condor_manager:
     # ==============================================================================================
     
     # ==============================================================================================
-    def create_scripts(self, extra_path='', extra_tag='', extra_cmds='', previous_sh_cmds=''):
+    def create_scripts(self, extra_path='', extra_tag='', extra_cmds='', previous_sh_cmds='', setup_flags=''):
 
         submits_logs_dir = self.condor_output_path
         
@@ -180,6 +180,9 @@ class condor_manager:
         cmd_copy, cmd_delete = self.setup_copying()
 
 
+        setup_command = f'check_command_success source setup.sh'
+
+
         # ------------------------------------------------------------------------------------------
         # SHELL FILE
         # ------------------------------------------------------------------------------------------
@@ -187,6 +190,7 @@ class condor_manager:
 
         replace_in_string(self.content_sh, shell_filename, [
             ('PREVIOUSCOMMANDS', previous_sh_cmds),
+            ('SETUPCOMMAND'    , setup_command + setup_flags),
             ('CMD_COPY'        , cmd_copy),
             ('DELETEFILES'     , cmd_delete),
             ('CMD'             , f'{self.cmd} --cpus {self.cpus} --copy_out_files {self.path_eos} {extra_cmds}')
