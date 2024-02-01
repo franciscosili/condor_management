@@ -177,15 +177,18 @@ class condor_manager:
         rel_path_dag_submits = os.path.relpath(submits_logs_dir, self.condor_output_path)
 
 
-        cmd_copy, cmd_delete = self.setup_copying()
+        cmd_copy, cmd_delete = prepare_input_files(self.path_eos,
+                                                   self.excluded_dirs,
+                                                   self.include_dirs_list)
 
 
         setup_command = f'check_command_success source setup.sh'
 
 
-        # modify actual command        
+        # modify actual command
+        cmd = self.cmd
         if self.cpus:
-            self.cmd += f' --cpus {self.cpus}'
+            cmd += f' --cpus {self.cpus}'
         
         # ------------------------------------------------------------------------------------------
         # SHELL FILE
@@ -197,7 +200,7 @@ class condor_manager:
             ('SETUPCOMMAND'    , setup_command + setup_flags),
             ('COPYCOMMAND'     , cmd_copy),
             ('DELETEFILES'     , cmd_delete),
-            ('CMD'             , f'{self.cmd} --copy_out_files {self.path_eos} {extra_cmds}')
+            ('CMD'             , f'{cmd} --copy_out_files {self.path_eos} {extra_cmds}')
         ])
         # ------------------------------------------------------------------------------------------
         # ------------------------------------------------------------------------------------------
@@ -233,6 +236,15 @@ class condor_manager:
         # ------------------------------------------------------------------------------------------
         # ------------------------------------------------------------------------------------------
 
+
+        self.reset_files()
+        return
+    # ==============================================================================================
+    
+    # ==============================================================================================
+    def reset_files(self):
+        self.include_dirs_list.clear()
+        self.excluded_dirs.clear()
         return
     # ==============================================================================================
     
