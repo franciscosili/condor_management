@@ -13,16 +13,13 @@ check_command_success() {
 
 
 echo $PWD
+ls -la
 
 mkdir code
 cd code
 
 # create tarbal
-check_command_success CMD_COPY
-
-echo $PWD
-
-cd "$(dirname "$0")"
+COPYCOMMAND
 
 echo $PWD
 

@@ -183,6 +183,10 @@ class condor_manager:
         setup_command = f'check_command_success source setup.sh'
 
 
+        # modify actual command        
+        if self.cpus:
+            self.cmd += f' --cpus {self.cpus}'
+        
         # ------------------------------------------------------------------------------------------
         # SHELL FILE
         # ------------------------------------------------------------------------------------------
@@ -191,9 +195,9 @@ class condor_manager:
         replace_in_string(self.content_sh, shell_filename, [
             ('PREVIOUSCOMMANDS', previous_sh_cmds),
             ('SETUPCOMMAND'    , setup_command + setup_flags),
-            ('CMD_COPY'        , cmd_copy),
+            ('COPYCOMMAND'     , cmd_copy),
             ('DELETEFILES'     , cmd_delete),
-            ('CMD'             , f'{self.cmd} --cpus {self.cpus} --copy_out_files {self.path_eos} {extra_cmds}')
+            ('CMD'             , f'{self.cmd} --copy_out_files {self.path_eos} {extra_cmds}')
         ])
         # ------------------------------------------------------------------------------------------
         # ------------------------------------------------------------------------------------------
