@@ -36,64 +36,68 @@ args = parser.parse_args()
 
 
 
-# ==================================================================================================
+#===================================================================================================
 # FLAGS AND CONSTANTS, SETTING UP THE TOOL
-# ==================================================================================================`
+#===================================================================================================
 # from the 'output' path, then these folders come. Inside these folders there will be the JOs, gen and deriv
 # directories
 versions_path_results = mkdirp(f'results_v{args.cversion}')
 
-
-
-condor_mg = condor_manager(args.tag,
-                           args.flavour,
-                           args.cmd,
-                           args.cpus,
-                           args.ram,
-                           args.logs_dir,
-                           args.path_eos,
-                           'output',
-                           versions_path_results,
-                           args.use_dag
-                           )
-# ==================================================================================================`
-# ==================================================================================================`
-
-# ==================================================================================================
-# PATHS AND OUTPUTS
-# ==================================================================================================
-condor_mg.add_include_dirs(['JOs', ])
-condor_mg.exclude_dirs(['output', '.git', 'photonjetsignal/deriv'])
-# ==================================================================================================`
-# ==================================================================================================`
-
-
-# ==================================================================================================
-# RUN CREATION OF SCRIPTS
-# ==================================================================================================
 if len(args.dsidrange) == 1:
     args.dsidrange.append(args.dsidrange[0]+1)
 
-# set of previous commands that need to be executed before running the python command
 
+
+
+condor_mg = condor_manager(args.tag,
+                            args.flavour,
+                            args.cmd,
+                            args.cpus,
+                            args.ram,
+                            args.logs_dir,
+                            args.path_eos,
+                            'output',
+                            versions_path_results,
+                            args.use_dag
+                            )
+#===================================================================================================
+#===================================================================================================
+
+print(args.dsidrange)
 
 for this_dsid in range(*args.dsidrange):
+    print(this_dsid)
+    #===============================================================================================
+    # PATHS AND OUTPUTS
+    #===============================================================================================
+    condor_mg.add_include_dirs([f'gen/{this_dsid}', ])
+    condor_mg.exclude_dirs(['output', '.git', 'photonjetsignal/gen'])
+    #===============================================================================================
+    #===============================================================================================
+
+
+    #===============================================================================================
+    # RUN CREATION OF SCRIPTS
+    #===============================================================================================
+    # set of previous commands that need to be executed before running the python command
+
+
     # for each region we are going to create a directory, and then combine the ranges and dofs
     extra_path   = this_dsid
-    extra_tag    = f'dsid{this_dsid}__cme{int(args.cme/1000)}__evts{int(args.nevents/1000)}k'
-    options_cmd  = f'--dsid {this_dsid} --cme {args.cme} --nevents {args.nevents}'
+    extra_tag    = f'dsid{this_dsid}__evts{int(args.nevents/1000)}k'
+    options_cmd  = f'--dsid {this_dsid} --nevents {args.nevents}'
     previous_cmd = 'check_command_success cd photonjetsignal\n'
 
     
     condor_mg.create_scripts(extra_path=extra_path,
-                             extra_tag=extra_tag,
-                             extra_cmds=f'{options_cmd} --cversion {args.cversion}',
-                             previous_sh_cmds=previous_cmd,
-                             setup_flags=' -g')
-    
-if args.use_dag:
-    condor_mg.save_dag()
-# ==================================================================================================`
-# ==================================================================================================`
+                            extra_tag=extra_tag,
+                            extra_cmds=f'{options_cmd} --cversion {args.cversion}',
+                            previous_sh_cmds=previous_cmd,
+                            setup_flags=' -d')
+        
+    if args.use_dag:
+        condor_mg.save_dag()
+    #===============================================================================================
+    #===============================================================================================
 
 
