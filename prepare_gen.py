@@ -64,7 +64,7 @@ condor_mg = condor_manager(args.tag,
 # PATHS AND OUTPUTS
 # ==================================================================================================
 condor_mg.add_include_dirs(['JOs', ])
-condor_mg.exclude_dirs(['output', '.git', 'photonjetsignal/deriv'])
+condor_mg.exclude_dirs(['output', '.git', 'photonjetsignal/deriv', 'photonjetsignal/__pycache__'])
 # ==================================================================================================`
 # ==================================================================================================`
 
