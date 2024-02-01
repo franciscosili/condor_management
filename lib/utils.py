@@ -162,8 +162,8 @@ def prepare_input_files(source_dir, exclude_dirs=None, include_dirs=None):
                 this_include_dir_nosource    = this_include_dir.replace(source_dir+'/', '')
                 general_include_dir_nosource = this_include_dir_nosource.rsplit('/', 1)[0]
 
-                cmd += f'mkdir -p {general_include_dir_nosource}\n'
-                cmd += f'cp -r {this_include_dir} {general_include_dir_nosource}\n'
+                cmd += f'check_command_success mkdir -p {general_include_dir_nosource}\n'
+                cmd += f'check_command_success cp -r {this_include_dir} {general_include_dir_nosource}\n'
     
     if files_delete:
         cmd_files_del = 'check_command_success rm ' + ' '.join(_f for _f in files_delete)
