@@ -71,7 +71,7 @@ for this_dsid in range(*args.dsidrange):
     # PATHS AND OUTPUTS
     #===============================================================================================
     condor_mg.add_include_dirs([f'gen/{this_dsid}', ])
-    condor_mg.exclude_dirs(['output', '.git', 'photonjetsignal/gen'])
+    condor_mg.exclude_dirs(['output', 'photonjetsignal/.git', 'photonjetsignal/gen'])
     #===============================================================================================
     #===============================================================================================
 
