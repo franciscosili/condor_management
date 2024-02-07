@@ -150,7 +150,8 @@ class condor_manager:
     # ==============================================================================================
     
     # ==============================================================================================
-    def create_scripts(self, extra_path='', extra_tag='', extra_cmds='', previous_sh_cmds='', setup_flags=''):
+    def create_scripts(self, extra_path='', extra_tag='', extra_cmds='', previous_sh_cmds='', setup_flags='',
+                       reset_files=True):
 
         submits_logs_dir = self.condor_output_path
         
@@ -236,8 +237,8 @@ class condor_manager:
         # ------------------------------------------------------------------------------------------
         # ------------------------------------------------------------------------------------------
 
-
-        self.reset_files()
+        if reset_files:
+            self.reset_files()
         return
     # ==============================================================================================
     
