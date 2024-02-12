@@ -5,7 +5,15 @@ from lib.condor_base import condor_manager
 from lib.utils import mkdirp, jobflavours
 from itertools import product
 
-
+jobflavours = [
+    'espresso',     # 20 minutes
+    'microcentury', # 1 hour
+    'longlunch',    # 2 hours
+    'workday',      # 8 hours
+    'tomorrow',     # 1 day
+    'testmatch',    # 3 days
+    'nextweek',     # 1 week
+]
 
 
 parser = argparse.ArgumentParser()
