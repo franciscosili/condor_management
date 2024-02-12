@@ -58,8 +58,15 @@ class condor_manager:
 
         # self.path_eos, from the given example path, is
         #   /eos/home-f/fsili/code/local/Resonances/code/PJA/photonjetanalysis
+        self.path_eos2 = ''
         with open(path_eos_file, 'r') as f:
-            self.path_eos = f.readline().strip('\n')
+            lines = f.readlines()
+            self.path_eos = lines[0].strip('\n')
+            if len(lines) > 1:
+                if lines[1].strip('\n'):
+                    self.path_eos2 = lines[1].strip('\n')
+
+            
 
         # self.project_name is
         #   photonjetanalysis
@@ -201,7 +208,7 @@ class condor_manager:
             ('SETUPCOMMAND'    , setup_command + setup_flags),
             ('COPYCOMMAND'     , cmd_copy),
             ('DELETEFILES'     , cmd_delete),
-            ('CMD'             , f'{cmd} --copy_out_files {self.path_eos} {extra_cmds}')
+            ('CMD'             , f'{cmd} --copy_out_files {self.path_eos2 if self.path_eos2 else self.path_eos} {extra_cmds}')
         ])
         # ------------------------------------------------------------------------------------------
         # ------------------------------------------------------------------------------------------
