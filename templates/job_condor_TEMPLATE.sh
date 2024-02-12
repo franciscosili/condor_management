@@ -15,8 +15,8 @@ check_command_success() {
 echo $PWD
 ls -la
 
-mkdir code
-cd code
+check_command_success mkdir code
+check_command_success cd code
 
 # create tarbal
 COPYCOMMAND
