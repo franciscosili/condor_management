@@ -1,6 +1,7 @@
 from datetime import datetime
-from .utils    import mkdirp, prepare_input_files, jobflavours, replace_in_string
+from .utils    import mkdirp, get_paths_file, replace_in_string, prepare_include_copy_cmd, prepare_exclude_copy_cmd
 import os, sys
+
 
 # ==================================================================================================`
 class condor_manager:
@@ -58,15 +59,12 @@ class condor_manager:
 
         # self.path_eos, from the given example path, is
         #   /eos/home-f/fsili/code/local/Resonances/code/PJA/photonjetanalysis
+        paths = get_paths_file(path_eos_file)
+        self.path_eos  = paths[0]
         self.path_eos2 = ''
-        with open(path_eos_file, 'r') as f:
-            lines = f.readlines()
-            self.path_eos = lines[0].strip('\n')
-            if len(lines) > 1:
-                if lines[1].strip('\n'):
-                    self.path_eos2 = lines[1].strip('\n')
+        if len(paths) > 1:
+            self.path_eos2 = paths[1]
 
-            
 
         # self.project_name is
         #   photonjetanalysis
@@ -109,46 +107,39 @@ class condor_manager:
 
         self.dagfile_content = ''
 
-        self.setup_contents()
-
-        return
-    # ==============================================================================================
-    
-    # ==============================================================================================
-    def add_include_dirs(self, include_dirs):
-
-        self.include_dirs_list = []
-
-        if include_dirs:
-            for d in include_dirs:
-                merged_path = os.path.join(self.path_eos, self.results_path, d)
-                
-                if os.path.exists(merged_path):
-                    self.include_dirs_list.append(merged_path)
-                    print(f'Adding {merged_path} to the list of included directories to copy to condor')
-                else:
-                    print(f'Tried to add the following path which does not exist {merged_path}')
-
-        return self.include_dirs_list
-    # ==============================================================================================
-    
-    # ==============================================================================================
-    def exclude_dirs(self, excluded_dirs):
-        self.excluded_dirs = excluded_dirs
-        return
-    # ==============================================================================================
-    
-    # ==============================================================================================
-    def setup_contents(self):
         with open(f'templates/job_condor_TEMPLATE.sh', 'r') as inf:
             self.content_sh = inf.read()
         with open(f'templates/condor_submit_TEMPLATE.sub', 'r') as inf:
             self.content_sub = inf.read()
+
+        return
     # ==============================================================================================
     
     # ==============================================================================================
-    def setup_copying(self):
-        return prepare_input_files(self.path_eos, self.excluded_dirs, self.include_dirs_list)
+    def add_include_exclude_dirs(self, include_exclude_dirs_dict):
+
+        self.include_dirs_cmds = []
+
+        for d in include_exclude_dirs_dict['include']:
+            if isinstance(d, tuple):
+                # We have a path with input, and output
+                output_path = os.path.join(self.results_path, d[1])
+
+                self.include_dirs_cmds += prepare_include_copy_cmd(input_path  = d[0],
+                                                                   output_path = output_path)
+
+            else:
+                # We have an input path and the output is guessed
+                merged_path = os.path.join(self.path_eos, self.results_path, d)
+
+                self.include_dirs_cmds += prepare_include_copy_cmd(input_path = merged_path,
+                                                                   source_dir = self.path_eos)
+        
+        
+        exclude_dirs_cmds, self.cmds_del = prepare_exclude_copy_cmd(self.path_eos,
+                                                                    include_exclude_dirs_dict)
+
+        self.include_dirs_cmds += exclude_dirs_cmds
     # ==============================================================================================
     
     # ==============================================================================================
@@ -185,10 +176,8 @@ class condor_manager:
         rel_path_dag_submits = os.path.relpath(submits_logs_dir, self.condor_output_path)
 
 
-        cmd_copy, cmd_delete = prepare_input_files(self.path_eos,
-                                                   self.excluded_dirs,
-                                                   self.include_dirs_list)
-
+        cmd_copy = '\n'.join(self.include_dirs_cmds)
+        cmd_del  = self.cmds_del
 
         setup_command = f'check_command_success source setup.sh'
 
@@ -207,7 +196,7 @@ class condor_manager:
             ('PREVIOUSCOMMANDS', previous_sh_cmds),
             ('SETUPCOMMAND'    , setup_command + setup_flags),
             ('COPYCOMMAND'     , cmd_copy),
-            ('DELETEFILES'     , cmd_delete),
+            ('DELETEFILES'     , cmd_del),
             ('CMD'             , f'{cmd} --copy_out_files {self.path_eos2 if self.path_eos2 else self.path_eos} {extra_cmds}')
         ])
         # ------------------------------------------------------------------------------------------
@@ -251,8 +240,7 @@ class condor_manager:
     
     # ==============================================================================================
     def reset_files(self):
-        self.include_dirs_list.clear()
-        self.excluded_dirs.clear()
+        self.include_dirs_cmds.clear()
         return
     # ==============================================================================================
     
