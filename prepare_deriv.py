@@ -57,8 +57,6 @@ if len(args.dsidrange) == 1:
     args.dsidrange.append(args.dsidrange[0]+1)
 
 
-
-
 condor_mg = condor_manager(args.tag,
                             args.flavour,
                             args.cmd,
@@ -73,15 +71,35 @@ condor_mg = condor_manager(args.tag,
 #===================================================================================================
 #===================================================================================================
 
-print(args.dsidrange)
+
+# In the case of using derivations, we need to have as input the EVNT files. These are copied to EOS
+# after their computation. Here we need to retrieve them
+eos_path = condor_mg.path_eos2
+
+print(f'Using {eos_path} as path where deriv and gen outpus will be stored. EVNT samples will be retrieved from here')
+
+evnt_samples = f'{eos_path}/{condor_mg.results_path}/gen'
 
 for this_dsid in range(*args.dsidrange):
     print(this_dsid)
     #===============================================================================================
     # PATHS AND OUTPUTS
     #===============================================================================================
-    condor_mg.add_include_dirs([f'gen/{this_dsid}', ])
-    condor_mg.exclude_dirs(['output', 'photonjetsignal/.git', 'photonjetsignal/gen'])
+
+    include_exclude_dict = {
+        'include': [
+            # in case of having a tuple, first is the inpput path, second is the path in condor
+            # the files will be copied to
+            (f'{evnt_samples}/{this_dsid}', 'gen')
+        ],
+        'exclude': [
+            'output',
+            'photonjetsignal/.git',
+            'photonjetsignal/__pycache__',
+            'photonjetsignal/gen'
+        ]
+    }
+    condor_mg.add_include_exclude_dirs(include_exclude_dict)
     #===============================================================================================
     #===============================================================================================
 

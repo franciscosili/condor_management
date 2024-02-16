@@ -85,8 +85,18 @@ for this_dsid in range(*args.dsidrange):
     # ==============================================================================================
     # PATHS AND OUTPUTS
     # ==============================================================================================
-    condor_mg.add_include_dirs(['JOs', ])
-    condor_mg.exclude_dirs(['output', 'photonjetsignal/.git', 'photonjetsignal/deriv', 'photonjetsignal/__pycache__'])
+    include_exclude_dict = {
+        'include': [
+            'JOs',
+        ],
+        'exclude': [
+            'output',
+            'photonjetsignal/.git',
+            'photonjetsignal/__pycache__',
+            'photonjetsignal/deriv'
+        ]
+    }
+    condor_mg.add_include_exclude_dirs(include_exclude_dict)
     # ==============================================================================================
     # ==============================================================================================
 
