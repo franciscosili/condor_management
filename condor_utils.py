@@ -30,6 +30,8 @@ def replace_in_string(input_str, output, replace_list_tuple):
     content = input_str
     for this_tuple in replace_list_tuple:
         content = content.replace(str(this_tuple[0]), str(this_tuple[1]))
+    
+    print(f'------- CREATING FILE {output}')
     with open(output, 'w') as out:
         out.write(content)
     return
@@ -57,35 +59,16 @@ def list_directories_up_to_depth(root_dir, depth):
 #===================================================================================================
 
 #===================================================================================================
-def prepare_include_copy_cmd(input_path, output_path=None, source_dir=None):
+def prepare_include_copy_cmd(input_path, output_path):
     
-    if not output_path and not source_dir:
-        print(f'Error preparing to include directory {input_path}. You need to specify either the source dir' + \
-              f' or the output path')
-        raise ValueError
-
     cmds = []
 
-    # when output_path is not specified, and source_dir is, the output will be inferred by removing
-    # source_dir from input_path
-    if source_dir and not output_path:
+    print(f'Adding included directory:  {input_path} ------> {output_path}')
 
-        include_dir_nosource = input_path.replace(source_dir+'/', '').rsplit('/', 1)[0]
-        print(f'Adding included directory:  {input_path} ------> {include_dir_nosource}')
-
-        cmds += [
-            f'check_command_success mkdir -p {include_dir_nosource}',
-            f'check_command_success cp -r {input_path} {include_dir_nosource}'
-        ]
-    
-    elif output_path and not source_dir:
-
-        print(f'Adding included directory:  {input_path} ------> {output_path}')
-
-        cmds += [
-            f'check_command_success mkdir -p {output_path}',
-            f'check_command_success cp -r {input_path} {output_path}'
-        ]
+    cmds += [
+        f'check_command_success mkdir -p {output_path}',
+        f'check_command_success cp -r {input_path} {output_path}'
+    ]
 
     print(f'Will do the following operations:')
     for c in cmds:
@@ -98,6 +81,8 @@ def prepare_include_copy_cmd(input_path, output_path=None, source_dir=None):
 def prepare_exclude_copy_cmd(source_dir, exclude_dirs):
     
     files_source_dir = glob.glob(f'{source_dir}/*')
+
+    print(files_source_dir)
 
     if 'exclude' in exclude_dirs:
         print(f'Will exclude the following directories')
@@ -115,7 +100,8 @@ def prepare_exclude_copy_cmd(source_dir, exclude_dirs):
         print(f'Processing directory {f}')
         # exclude directories
         
-        if exclude_dirs['exclude']:
+        if any(f in f'{source_dir}/{exclude}' for exclude in exclude_dirs.get('exclude', [])):
+            
             print(f'Looping on directories/files to exclude:')
             for this_dir_exclude in exclude_dirs['exclude']:
                 print(f'  Checking on {this_dir_exclude}')
@@ -132,6 +118,10 @@ def prepare_exclude_copy_cmd(source_dir, exclude_dirs):
                         print(f'    Excluding directory {this_dir_exclude}')
                         excluded_files.append(f)
                         continue
+                    else:
+                        files_copy.append(f)
+                        continue
+
                 else:
                     # we want to list all directories and files up to the depth given by the number of slashes
                     # for example: we want to exclude
