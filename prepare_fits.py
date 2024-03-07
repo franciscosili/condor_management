@@ -142,6 +142,8 @@ elif '--sstest' in args.cmd:
 # ==================================================================================================
 # RUN CREATION OF SCRIPTS
 # ==================================================================================================
+njobs = 0
+
 for this_reg, this_range, this_func, this_model in product(args.regions, args.ranges, args.func_models, args.models):
     # for each region we are going to create a directory, and then combine the ranges and dofs
     this_range_str = f'range_{this_range[0]}-{this_range[1]}'
@@ -206,7 +208,6 @@ for this_reg, this_range, this_func, this_model in product(args.regions, args.ra
                 this_cmd_opt = f'{options_cmd} {fixed_param_flag} --m_vals {this_mass}'
 
 
-
             extra_tag    = f'{this_reg}__{this_range_str}__{this_func}__{fixed_params_str}__m{this_mass}'
 
             condor_mg.create_scripts(extra_path       = extra_path,
@@ -216,9 +217,12 @@ for this_reg, this_range, this_func, this_model in product(args.regions, args.ra
                                      setup_flags      = ' --default',
                                      reset_files      = False)
 
+            njobs += 1
 
 condor_mg.save_dag()
 # ==================================================================================================`
 # ==================================================================================================`
 
-
+print('\n\n' + '='*100)
+print(f'Total number of jobs = {njobs}')
+print('='*100)
