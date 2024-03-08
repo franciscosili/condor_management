@@ -67,6 +67,16 @@ There are two cases respecting the EOS outputs:
    - those which are saved in directories which are not synced.
 """
 
+# output paths in eos
+path_results = {
+    'local':  pathhelper.original_path.replace(common_path, '')[:-1],
+    'remote': pathhelper_eos.original_path.replace(common_path, '')[:-1]
+}
+print(f'Output results will be written to:')
+print(f'  - Local  eos: {path_results["local"]}')
+print(f'  - Remote eos: {path_results["remote"]}')
+
+
 # paths in eos local
 pathhelper            .add_to_general_path(f'{args.path}/histograms_v{args.hversion}')
 # paths in eos remote
@@ -91,11 +101,6 @@ general_path_in_condor_output = general_path_in_condor_output.format(**{'stype':
 
 
 
-# output paths in eos
-path_results = {
-    'local':  general_path_local,
-    'remote': general_path_remote
-}
 
 
 condor_mg = condor_manager(args.tag,
