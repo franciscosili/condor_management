@@ -160,47 +160,26 @@ for this_reg, this_range, this_func, this_model in product(args.regions, args.ra
     options_cmd    = f'--ranges {this_range[0]} {this_range[1]} --func_model {this_func} --regions {this_reg} --models {this_model}'
 
 
-    fixed_parameters = []
-    is_qstar         = signalgrid.model_qstar(this_model)
-    is_gaus          = signalgrid.model_gaus(this_model)
-    
-    if is_qstar:
-        fixed_parameters.append(args.f_vals)
-        fixed_parameters.append(args.quarks)
-    elif is_gaus:
-        fixed_parameters.append(args.widths)
-        fixed_parameters.append([None,])
-    else:
-        fixed_parameters.append(args.ndims)
-        fixed_parameters.append([None,])
-
+    fixed_parameters, is_qstar, is_gaus = signalgrid.get_fixed_parameters_list(this_model, args.f_vals,
+                                                                               args.widths, args.ndims,
+                                                                               args.quarks)
 
     for this_first_fixed_param, this_second_fixed_param in product(*fixed_parameters):
         # ------------------------------------------ GETTING PARAMETERS
-        this_quark = None
-        this_fval  = None
-        this_ndim  = None
-        this_width = None
-        
+        these_params, m_vals, fixed_params_str = \
+                signalgrid.get_fixed_parameters_strings_mass_list(this_first_fixed_param,
+                                                                  this_second_fixed_param,
+                                                                  args.m_vals if not is_gaus else args.means,
+                                                                  this_model,
+                                                                  is_siginjtest)
+
+        (this_quark, this_fval, this_width, this_ndim) = these_params
+
         if is_qstar:
-            this_quark       = this_second_fixed_param
-            this_fval        = this_first_fixed_param
-            fixed_params_str = f'{this_quark}_{signalgrid.coupling_string(this_fval)}'
-            m_vals           = [m for m in args.m_vals if m in signalgrid.q_f_m_dict[this_quark][this_fval] and this_range[0]+200<m<this_range[1]]
             fixed_param_flag = f'--quarks {this_quark} --f_vals {this_fval}'
         elif is_gaus:
-            this_width       = this_first_fixed_param
-            fixed_params_str = f'width{signalgrid.coupling_string(this_width)}'
-            # modify the masses to avoid empty signals and since it doesnt make any sense to use signals outside the fit range
-            m_vals           = [m for m in args.means if m in signalgrid.w_m_dict[this_width] and this_range[0]+200<m<this_range[1]]
-            if is_siginjtest:
-                m_vals = [m for m in m_vals if m<this_range[1]-2000]
-            
             fixed_param_flag = f'--widths {this_width}'
         else:
-            this_ndim        = this_first_fixed_param
-            fixed_params_str = this_ndim
-            m_vals           = [m for m in args.m_vals if m in signalgrid.n_m_dict[this_ndim] and this_range[0]+200<m<this_range[1]]
             fixed_param_flag = f'--ndims {this_ndim}'
         # ------------------------------------------------------------------------------------
 
