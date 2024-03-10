@@ -171,7 +171,7 @@ for this_reg, this_range, this_func, this_model in product(args.regions, args.ra
                                                                   this_second_fixed_param,
                                                                   args.m_vals if not is_gaus else args.means,
                                                                   this_model,
-                                                                  is_siginjtest)
+                                                                  is_siginjtest=is_siginjtest)
 
         (this_quark, this_fval, this_width, this_ndim) = these_params
 
