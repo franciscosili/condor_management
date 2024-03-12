@@ -135,10 +135,13 @@ condor_mg.add_include_exclude_dirs(include_exclude_dict)
 
 is_siginjtest = False
 is_sstest     = False
+is_bkgonly    = True
 if '--siginj' in args.cmd:
     is_siginjtest = True
 elif '--sstest' in args.cmd:
     is_sstest = True
+elif '--bkgonly' in args.cmd:
+    is_bkgonly = True
 
 
 # ==================================================================================================`
@@ -149,59 +152,73 @@ elif '--sstest' in args.cmd:
 # ==================================================================================================
 njobs = 0
 
-for this_reg, this_range, this_func, this_model in product(args.regions, args.ranges, args.func_models, args.models):
+for this_reg, this_range, this_func in product(args.regions, args.ranges, args.func_models):
     # for each region we are going to create a directory, and then combine the ranges and dofs
     this_range_str = f'range_{this_range[0]}-{this_range[1]}'
 
     extra_path     = f'{this_reg}/{this_range_str}__model_{this_func}'
 
+    options_cmd    = f'--ranges {this_range[0]} {this_range[1]} --func_model {this_func} --regions {this_reg}'
+
+
+    if not is_bkgonly:
+
+        for this_model in args.models:
+
+            fixed_parameters, is_qstar, is_gaus = signalgrid.get_fixed_parameters_list(this_model, args.f_vals,
+                                                                                    args.widths, args.ndims,
+                                                                                    args.quarks)
+
+            for this_first_fixed_param, this_second_fixed_param in product(*fixed_parameters):
+                # ------------------------------------------ GETTING PARAMETERS
+                these_params, m_vals, fixed_params_str = \
+                        signalgrid.get_fixed_parameters_strings_mass_list(this_first_fixed_param,
+                                                                        this_second_fixed_param,
+                                                                        args.m_vals if not is_gaus else args.means,
+                                                                        this_model,
+                                                                        is_siginjtest=is_siginjtest)
+
+                (this_quark, this_fval, this_width, this_ndim) = these_params
+
+                if is_qstar:
+                    fixed_param_flag = f'--quarks {this_quark} --f_vals {this_fval}'
+                elif is_gaus:
+                    fixed_param_flag = f'--widths {this_width}'
+                else:
+                    fixed_param_flag = f'--ndims {this_ndim}'
+                # ------------------------------------------------------------------------------------
+
+
+                for this_mass in m_vals:
+                    
+                    if is_gaus:
+                        this_cmd_opt = f'{options_cmd}  --models {this_model} {fixed_param_flag} --means {this_mass}'
+                    else:
+                        this_cmd_opt = f'{options_cmd}  --models {this_model} {fixed_param_flag} --m_vals {this_mass}'
+
+
+                    extra_tag    = f'{this_reg}__{this_range_str}__{this_func}__{fixed_params_str}__m{this_mass}'
+
+                    condor_mg.create_scripts(extra_path       = extra_path,
+                                            extra_tag        = extra_tag,
+                                            extra_cmds       = f'{versions_flags} {this_cmd_opt}',
+                                            previous_sh_cmds = 'tree .',
+                                            setup_flags      = ' --default',
+                                            reset_files      = False)
+
+                    njobs += 1
     
+    else:
+        extra_tag = f'{this_reg}__{this_range_str}__{this_func}'
 
-    options_cmd    = f'--ranges {this_range[0]} {this_range[1]} --func_model {this_func} --regions {this_reg} --models {this_model}'
+        condor_mg.create_scripts(extra_path       = extra_path,
+                                 extra_tag        = extra_tag,
+                                 extra_cmds       = f'{versions_flags} {options_cmd}',
+                                 previous_sh_cmds = 'tree .',
+                                 setup_flags      = ' --default',
+                                 reset_files      = False)
+        njobs += 1
 
-
-    fixed_parameters, is_qstar, is_gaus = signalgrid.get_fixed_parameters_list(this_model, args.f_vals,
-                                                                               args.widths, args.ndims,
-                                                                               args.quarks)
-
-    for this_first_fixed_param, this_second_fixed_param in product(*fixed_parameters):
-        # ------------------------------------------ GETTING PARAMETERS
-        these_params, m_vals, fixed_params_str = \
-                signalgrid.get_fixed_parameters_strings_mass_list(this_first_fixed_param,
-                                                                  this_second_fixed_param,
-                                                                  args.m_vals if not is_gaus else args.means,
-                                                                  this_model,
-                                                                  is_siginjtest=is_siginjtest)
-
-        (this_quark, this_fval, this_width, this_ndim) = these_params
-
-        if is_qstar:
-            fixed_param_flag = f'--quarks {this_quark} --f_vals {this_fval}'
-        elif is_gaus:
-            fixed_param_flag = f'--widths {this_width}'
-        else:
-            fixed_param_flag = f'--ndims {this_ndim}'
-        # ------------------------------------------------------------------------------------
-
-
-        for this_mass in m_vals:
-            
-            if is_gaus:
-                this_cmd_opt = f'{options_cmd} {fixed_param_flag} --means {this_mass}'
-            else:
-                this_cmd_opt = f'{options_cmd} {fixed_param_flag} --m_vals {this_mass}'
-
-
-            extra_tag    = f'{this_reg}__{this_range_str}__{this_func}__{fixed_params_str}__m{this_mass}'
-
-            condor_mg.create_scripts(extra_path       = extra_path,
-                                     extra_tag        = extra_tag,
-                                     extra_cmds       = f'{versions_flags} {this_cmd_opt}',
-                                     previous_sh_cmds = 'tree .',
-                                     setup_flags      = ' --default',
-                                     reset_files      = False)
-
-            njobs += 1
 
 condor_mg.save_dag()
 # ==================================================================================================`
