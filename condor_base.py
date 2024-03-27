@@ -1,5 +1,5 @@
 from datetime import datetime
-from condor_utils    import mkdirp, get_paths_file, replace_in_string, prepare_include_copy_cmd, prepare_exclude_copy_cmd
+from .condor_utils    import mkdirp, replace_in_string, prepare_include_copy_cmd, prepare_exclude_copy_cmd
 import os, sys
 
 from typing import Union, Dict, List
@@ -87,9 +87,9 @@ class condor_manager:
 
         self.dagfile_content = ''
 
-        with open(f'condor/templates/job_condor_TEMPLATE.sh', 'r') as inf:
+        with open(f'{os.path.dirname(__file__)}/templates/job_condor_TEMPLATE.sh', 'r') as inf:
             self.content_sh = inf.read()
-        with open(f'condor/templates/condor_submit_TEMPLATE.sub', 'r') as inf:
+        with open(f'{os.path.dirname(__file__)}/templates/condor_submit_TEMPLATE.sub', 'r') as inf:
             self.content_sub = inf.read()
 
         return
@@ -105,13 +105,15 @@ class condor_manager:
             output_path = os.path.join(self.output_in_condor_path, d[1])
 
             self.include_dirs_cmds += prepare_include_copy_cmd(input_path  = d[0],
-                                                                output_path = output_path)
+                                                               output_path = output_path)
 
         
         exclude_dirs_cmds, self.cmds_del = prepare_exclude_copy_cmd(os.getcwd(),
                                                                     include_exclude_dirs_dict)
 
         self.include_dirs_cmds += exclude_dirs_cmds
+
+        return
     # ==============================================================================================
     
     # ==============================================================================================
@@ -161,7 +163,11 @@ class condor_manager:
         if self.cpus:
             cmd += f' --cpus {self.cpus}'
         
-        extra_cmds += f' --copy_out_files {self.path_results["local"]} --copy_out_files_remote {self.path_results["remote"]}'
+
+        extra_cmds += f' --copy_out_files {self.path_results["local"]}'
+        
+        if 'remote' in self.path_results:
+            extra_cmds += f' --copy_out_files_remote {self.path_results["remote"]}'
 
         # ------------------------------------------------------------------------------------------
         # SHELL FILE
