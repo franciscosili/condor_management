@@ -47,3 +47,21 @@ Initialize the `condor_manager` class. For this one needs to pass certain argume
 
 Then it is possible to add paths to include when copying the files to condor, or to exclude some of them as well. In the template there's an example of how one should create this
 dictionary. Then, once created, the scripts can be created by passing extra commands, extra paths, extra tags or commands to setup.
+
+## Instructions on how you have to modify your code
+
+This tool unluckily is not optimal in the way it operates: one needs to make changes to the code is running.
+
+The following changes need to be done to the code:
+
+1. **Add a flag indicating the output path**: it is necessary to tell the code to copy the outputs. This is required to happen inside the code because some scripts output results in subfolders, and therefore one ends-up copying the same outputs twice.
+    Let's say that we have a script `test1.py` which outputs to directory `output_path/dir1/test1_output.txt`
+    However, there's another script `test2.py` that takes as input `test1_output.txt` and outputs to `output_path/dir2/test2_output.txt`, which is in the same directory.
+    If one would like to run with condor only `test2.py`, and copy the output directory `output_path`, we would end-up copying `test1_output.txt` from `eos` -> condor -> `eos`, which again, is not ideal.
+2. **Copy outputs from condor to output path**: Then, what we need to do is to tell the script to copy the subdirectory it's creating, in that case, `dir2`.
+
+    Inside `condor_utils` there are two helper functions that achieve this. To copy outputs created inside `dir2` to the `local` path:
+
+    ```python
+    copy_output_from_condor(dir2, path_resuts['local'])
+    ```

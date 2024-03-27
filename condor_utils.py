@@ -231,3 +231,47 @@ def get_paths_file(infile):
     return paths
 #===================================================================================================
 
+
+
+
+#===================================================================================================
+#===================================================================================================
+#===================================================================================================
+# helper function to copy output directory from each script to eos
+#===================================================================================================
+#===================================================================================================
+#===================================================================================================
+
+#==================================================================================================
+def copy_dir(input_path, output_path) -> None:
+    """function to copy a directory from one path to another
+    """
+    import shutil
+    mkdirp(output_path)
+    
+    print(f'Copying directory: {input_path} -----> {output_path}')
+    shutil.copytree(input_path, output_path, dirs_exist_ok=True)
+    return
+#==================================================================================================
+
+#===================================================================================================
+def copy_output_from_condor(condor_path : str,
+                            output_path : str) -> None:
+    
+    # delete the ./ and remote directories in case it exist
+    print(f'Results path in condor: {condor_path}')
+
+    condor_path = condor_path.strip('./')
+    common_path = condor_path.replace('remote/', '')
+    # common_path is the path that will exist in eos
+    
+    # now we need to create the common_path in the output_path
+    output_common_path = f'{output_path}/{common_path}'
+
+    print(f'Creating common path in /eos/: {output_common_path}')
+    mkdirp(output_common_path)
+
+    print(f'Looping inside the common path and copying directories to eos')
+    copy_dir(f'{condor_path}', output_common_path)
+    return
+#===================================================================================================
