@@ -1,7 +1,7 @@
 Executable      =   EXECUTABLE
-Log             =   OUTPATHoutput.log
-Error           =   OUTPATHoutput.err
-Output          =   OUTPATHoutput.out
+Log             =   LOGFILE
+Error           =   ERRORFILE
+Output          =   OUTPUTFILE
 universe        =   vanilla
 +JobFlavour     =   "FLAVOUR"
 

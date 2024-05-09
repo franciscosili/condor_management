@@ -72,6 +72,7 @@ class condor_manager:
         # setup executable and condor submit filenames and paths
         self.executable_filename    = f'job_condor__{self.current_tag}'
         self.condor_submit_filename = f'condor_submit__{self.current_tag}'
+        self.outputs_condor_filename = f'output__{self.current_tag}'
 
         if self.use_dag:
             self.dag_filename  = f'dag__{self.current_tag}.dag'
@@ -128,6 +129,7 @@ class condor_manager:
                        extra_cmds       : str  = '',
                        previous_sh_cmds : str  = '',
                        setup_flags      : str  = '',
+                       copy_files       : bool = True,
                        reset_files      : bool = True) -> None:
 
         submits_logs_dir = self.path_submits_logs
@@ -137,12 +139,14 @@ class condor_manager:
             submits_logs_dir = self.add_subdir_in_logs(extra_path)
         
 
-        executable_filename    = self.executable_filename
-        condor_submit_filename = self.condor_submit_filename
+        executable_filename     = self.executable_filename
+        condor_submit_filename  = self.condor_submit_filename
+        outputs_condor_filename = self.outputs_condor_filename
 
-        if extra_tag != '':
-            executable_filename    += f'__{extra_tag}.sh'
-            condor_submit_filename += f'__{extra_tag}.sub'
+        if extra_tag:
+            executable_filename     += f'__{extra_tag}.sh'
+            condor_submit_filename  += f'__{extra_tag}.sub'
+            outputs_condor_filename += f'__{extra_tag}'
         else:
             executable_filename    += '.sh'
             condor_submit_filename += '.sub'
@@ -164,10 +168,11 @@ class condor_manager:
             cmd += f' --cpus {self.cpus}'
         
 
-        extra_cmds += f' --copy_out_files {self.path_results["local"]}'
-        
-        if 'remote' in self.path_results:
-            extra_cmds += f' --copy_out_files_remote {self.path_results["remote"]}'
+        if copy_files:
+            extra_cmds += f' --copy_out_files {self.path_results["local"]}'
+            
+            if 'remote' in self.path_results:
+                extra_cmds += f' --copy_out_files_remote {self.path_results["remote"]}'
 
         # ------------------------------------------------------------------------------------------
         # SHELL FILE
@@ -199,7 +204,9 @@ class condor_manager:
 
         replace_in_string(self.content_sub, sub_filename, [
             ('EXECUTABLE'  , executable_filename),
-            ('OUTPATH'     , ''),
+            ('LOGFILE'     , 'output.log'),
+            ('ERRORFILE'   , f'{outputs_condor_filename}.err'),
+            ('OUTPUTFILE'  , f'{outputs_condor_filename}.out'),
             ('CPUS'        , set_cpu),
             ('RAM'         , set_ram),
             ('FLAVOUR'     , self.flavour),
