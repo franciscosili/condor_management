@@ -5,12 +5,11 @@ import os, sys
 from typing import Union, Dict, List
 
 # ==================================================================================================`
-class condor_manager:
+class CondorManager:
     # ==============================================================================================
     def __init__(self,
                  tag                     : str,
                  flavour                 : str,
-                 cmd                     : str,
                  path_submits_logs       : str,
                  path_results            : Dict[str, str],
                  path_output_in_condor   : int,
@@ -37,7 +36,6 @@ class condor_manager:
 
         self.tag         = tag
         self.flavour     = flavour
-        self.cmd         = cmd
         self.cpus        = cpus
         self.ram         = ram
         self.now         = datetime.now().strftime("%Y-%m-%d_%H-%M")
@@ -124,9 +122,9 @@ class condor_manager:
     
     # ==============================================================================================
     def create_scripts(self,
+                       cmd              : str,
                        extra_path       : str  = '',
                        extra_tag        : str  = '',
-                       extra_cmds       : str  = '',
                        previous_sh_cmds : str  = '',
                        setup_flags      : str  = '',
                        copy_files       : bool = True,
@@ -163,16 +161,15 @@ class condor_manager:
 
 
         # modify actual command
-        cmd = self.cmd
         if self.cpus:
             cmd += f' --cpus {self.cpus}'
         
 
         if copy_files:
-            extra_cmds += f' --copy_out_files {self.path_results["local"]}'
+            cmd += f' --copy_out_files {self.path_results["local"]}'
             
             if 'remote' in self.path_results:
-                extra_cmds += f' --copy_out_files_remote {self.path_results["remote"]}'
+                cmd += f' --copy_out_files_remote {self.path_results["remote"]}'
 
         # ------------------------------------------------------------------------------------------
         # SHELL FILE
@@ -184,7 +181,7 @@ class condor_manager:
             ('SETUPCOMMAND'    , setup_command + setup_flags),
             ('COPYCOMMAND'     , cmd_copy),
             ('DELETEFILES'     , cmd_del),
-            ('CMD'             , f'{cmd} {extra_cmds}')
+            ('CMD'             , cmd)
         ])
         # ------------------------------------------------------------------------------------------
         # ------------------------------------------------------------------------------------------
