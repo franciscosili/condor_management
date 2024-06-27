@@ -67,7 +67,8 @@ def prepare_include_copy_cmd(input_path, output_path):
 
     cmds += [
         f'check_command_success mkdir -p {output_path}',
-        f'check_command_success cp -r {input_path} {output_path}'
+        f'check_command_success rsync -a --exclude="*/*.pdf" --exclude="*/macros" {input_path} {output_path}'
+        # f'check_command_success cp -r {input_path} {output_path}'
     ]
 
     print(f'Will do the following operations:')
