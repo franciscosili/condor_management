@@ -1,8 +1,9 @@
-from datetime import datetime
-from .condor_utils    import mkdirp, replace_in_string, prepare_include_copy_cmd, prepare_exclude_copy_cmd
-import os, sys
 
-from typing import Union, Dict, List
+import os
+from datetime import datetime
+
+from .condor_utils import mkdirp, replace_in_string, prepare_include_copy_cmd, prepare_exclude_copy_cmd
+
 
 # ==================================================================================================`
 class CondorManager:
@@ -11,14 +12,15 @@ class CondorManager:
                  tag                     : str,
                  flavour                 : str,
                  path_submits_logs       : str,
-                 path_results            : Dict[str, str],
-                 path_output_in_condor   : int,
+                 path_results            : dict[str, str],
+                 path_output_in_condor   : str,
                  extra_path_submits_logs : str = None,
                  cpus                    : int = 2,
                  ram                     : int = 2,
                  use_dag                 : bool = True,
                  in_afs                  : bool = True,
-                 notify                  : bool = True) -> None:
+                 notify                  : bool = True
+                 ) -> None:
         """
         Class that automatically manages dags, submits, shell files and sets up everything to run with condor.
 
@@ -34,57 +36,63 @@ class CondorManager:
             use_dag               (bool, optional): Whether to use dags or simple condor submits. Defaults to True.
         """
 
-        self.tag         = tag
-        self.flavour     = flavour
-        self.cpus        = cpus
-        self.ram         = ram
-        self.now         = datetime.now().strftime("%Y-%m-%d_%H-%M")
-        self.current_tag = f'{self.tag}__{self.now}'
+        self.tag         : str = tag
+        self.flavour     : str = flavour
+        self.cpus        : int = cpus
+        self.ram         : int = ram
+        self.now         : str = datetime.now().strftime("%Y-%m-%d_%H-%M")
+        self.current_tag : str = f'{self.tag}__{self.now}'
 
-        self.use_dag     = use_dag
-        self.dag_addon   = 'dags' if self.use_dag else 'standalone'
+        self.use_dag     : bool = use_dag
+        self.dag_addon   : str  = 'dags' if self.use_dag else 'standalone'
         
-        self.in_afs      = in_afs
-        self.notify      = notify
+        self.in_afs      : bool = in_afs
+        self.notify      : bool = notify
 
+        
+        
         # Paths to store the submits/shells/dag files
-        self.path_submits_logs = path_submits_logs
+        self.path_submits_logs: str = path_submits_logs
+        
         if extra_path_submits_logs is not None:
             self.path_submits_logs += f'/{extra_path_submits_logs}'
+        
         self.path_submits_logs += f'/{self.dag_addon}/{self.current_tag}'
         mkdirp(self.path_submits_logs)
 
 
         # Paths to store all outputs
-        self.path_results = path_results
+        self.path_results: dict[str, str] = path_results
         for v in self.path_results.values():
             mkdirp(v)
-            
+
 
 
         # Output path for files inside condor
-        self.output_in_condor_path = path_output_in_condor
+        self.output_in_condor_path: str = path_output_in_condor
         # mkdirp(self.output_in_condor_path)
         
 
         # setup executable and condor submit filenames and paths
-        self.executable_filename    = f'job_condor__{self.current_tag}'
-        self.condor_submit_filename = f'condor_submit__{self.current_tag}'
-        self.outputs_condor_filename = f'output__{self.current_tag}'
+        self.executable_filename    : str = f'job_condor__{self.current_tag}'
+        self.condor_submit_filename : str = f'condor_submit__{self.current_tag}'
+        self.outputs_condor_filename: str = f'output__{self.current_tag}'
 
+        
+        
         if self.use_dag:
-            self.dag_filename  = f'dag__{self.current_tag}.dag'
-            self.dagfile       = f'{self.path_submits_logs}/{self.dag_filename}'
+            self.dag_filename: str  = f'dag__{self.current_tag}.dag'
+            self.dagfile     : str  = f'{self.path_submits_logs}/{self.dag_filename}'
         
         else:
             # name of executables and submits files
-            self.executable_filename    = f'{self.executable_filename}'
-            self.condor_submit_filename = f'{self.condor_submit_filename}'
+            self.executable_filename   : str = f'{self.executable_filename}'
+            self.condor_submit_filename: str = f'{self.condor_submit_filename}'
 
-            self.executable    = f'{self.path_submits_logs}/{self.executable_filename}'
-            self.condor_submit = f'{self.path_submits_logs}/{self.condor_submit_filename}'
+            self.executable   : str = f'{self.path_submits_logs}/{self.executable_filename}'
+            self.condor_submit: str = f'{self.path_submits_logs}/{self.condor_submit_filename}'
 
-        self.dagfile_content = ''
+        self.dagfile_content: str = ''
 
         with open(f'{os.path.dirname(__file__)}/templates/job_condor_TEMPLATE.sh', 'r') as inf:
             self.content_sh = inf.read()
@@ -128,18 +136,19 @@ class CondorManager:
                        previous_sh_cmds : str  = '',
                        setup_flags      : str  = '',
                        copy_files       : bool = True,
-                       reset_files      : bool = True) -> None:
+                       reset_files      : bool = True
+                       ) -> None:
 
-        submits_logs_dir = self.path_submits_logs
+        submits_logs_dir: str = self.path_submits_logs
         
         if extra_path:
             # extra path to add to the logfiles
             submits_logs_dir = self.add_subdir_in_logs(extra_path)
         
 
-        executable_filename     = self.executable_filename
-        condor_submit_filename  = self.condor_submit_filename
-        outputs_condor_filename = self.outputs_condor_filename
+        executable_filename    : str = self.executable_filename
+        condor_submit_filename : str = self.condor_submit_filename
+        outputs_condor_filename: str = self.outputs_condor_filename
 
         if extra_tag:
             executable_filename     += f'__{extra_tag}.sh'
@@ -151,14 +160,14 @@ class CondorManager:
         
 
         # path of the .sub from the .dag file
-        rel_path_dag_submits = os.path.relpath(submits_logs_dir, self.path_submits_logs)
+        rel_path_dag_submits: str = os.path.relpath(submits_logs_dir, self.path_submits_logs)
 
 
-        cmd_copy = '\n'.join(self.include_dirs_cmds)
-        cmd_del  = self.cmds_del
+        cmd_copy: str = '\n'.join(self.include_dirs_cmds)
+        cmd_del : str = self.cmds_del
 
-        setup_command = f'check_command_success source setup.sh'
-
+        
+        setup_command: str = 'check_command_success source setup.sh'
 
         # modify actual command
         if self.cpus:
@@ -171,10 +180,12 @@ class CondorManager:
             if 'remote' in self.path_results:
                 cmd += f' --copy_out_files_remote {self.path_results["remote"]}'
 
+
+
         # ------------------------------------------------------------------------------------------
         # SHELL FILE
         # ------------------------------------------------------------------------------------------
-        shell_filename = f'{submits_logs_dir}/{executable_filename}'
+        shell_filename: str = f'{submits_logs_dir}/{executable_filename}'
 
         replace_in_string(self.content_sh, shell_filename, [
             ('PREVIOUSCOMMANDS', previous_sh_cmds),
@@ -190,10 +201,10 @@ class CondorManager:
         # ------------------------------------------------------------------------------------------
         # CONDOR SUBMIT FILE
         # ------------------------------------------------------------------------------------------
-        sub_filename = f'{submits_logs_dir}/{condor_submit_filename}'
+        sub_filename: str = f'{submits_logs_dir}/{condor_submit_filename}'
 
-        set_cpu = ''
-        set_ram = ''
+        set_cpu: str = ''
+        set_ram: str = ''
         if self.cpus is not None:
             set_cpu = f'request_cpus    =   {self.cpus}'
         if self.ram is not None:

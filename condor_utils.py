@@ -59,9 +59,9 @@ def list_directories_up_to_depth(root_dir, depth):
 #===================================================================================================
 
 #===================================================================================================
-def prepare_include_copy_cmd(input_path, output_path):
+def prepare_include_copy_cmd(input_path: str, output_path: str) -> list[str]:
     
-    cmds = []
+    cmds: list[str] = []
 
     print(f'Adding included directory:  {input_path} ------> {output_path}')
 
@@ -70,7 +70,7 @@ def prepare_include_copy_cmd(input_path, output_path):
         f'check_command_success rsync -a --exclude="*/*.pdf" --exclude="*/macros" {input_path} {output_path}'
     ]
 
-    print(f'Will do the following operations:')
+    print('Will do the following operations:')
     for c in cmds:
         print(f'  {c}')
 
@@ -78,32 +78,30 @@ def prepare_include_copy_cmd(input_path, output_path):
 #===================================================================================================
 
 #===================================================================================================
-def prepare_exclude_copy_cmd(source_dir, exclude_dirs):
+def prepare_exclude_copy_cmd(source_dir: str, exclude_dirs: list[str]) -> tuple[list[str], str]:
     
-    files_source_dir = glob.glob(f'{source_dir}/*')
+    files_source_dir: list[str] = glob.glob(f'{source_dir}/*')
 
     print(files_source_dir)
+    
+    print('Will exclude the following directories')
+    for d in exclude_dirs:
+        print(f'    {d}')
+    
 
-    if 'exclude' in exclude_dirs:
-        print(f'Will exclude the following directories')
-        for d in exclude_dirs['exclude']:
-            print(f'    {d}')
-
-
-    cmds           = []
-    excluded_files = []
-    files_copy     = []
-    files_delete   = []
+    cmds          : list[str] = []
+    excluded_files: list[str] = []
+    files_copy    : list[str] = []
+    files_delete  : list[str] = []
 
 
     for f in files_source_dir:
         print(f'Processing directory {f}')
         # exclude directories
         
-        if any(f in f'{source_dir}/{exclude}' for exclude in exclude_dirs.get('exclude', [])):
-            
-            print(f'Looping on directories/files to exclude:')
-            for this_dir_exclude in exclude_dirs['exclude']:
+        if any(f in f'{source_dir}/{exclude}' for exclude in exclude_dirs):
+            print('Looping on directories/files to exclude:')
+            for this_dir_exclude in exclude_dirs:
                 print(f'  Checking on {this_dir_exclude}')
 
                 if this_dir_exclude.split('/', 1)[0] not in f:
@@ -111,7 +109,7 @@ def prepare_exclude_copy_cmd(source_dir, exclude_dirs):
                     continue
                 
                 # count how many / are there in the exclude directory
-                nslashes = this_dir_exclude.count('/')
+                nslashes: int = this_dir_exclude.count('/')
 
                 if nslashes == 0:
                     if this_dir_exclude in f:
@@ -173,7 +171,7 @@ def prepare_exclude_copy_cmd(source_dir, exclude_dirs):
 
     files_copy = [f for f in files_copy if f not in excluded_files]
 
-    print(f'List of files/directories to copy')
+    print('List of files/directories to copy')
     for this_file in files_copy:
         print(f'  {this_file}')
 
@@ -181,40 +179,39 @@ def prepare_exclude_copy_cmd(source_dir, exclude_dirs):
     for this_file in files_copy:
         cmds += create_parent_dirs(this_file, source_dir, '.')
     
-
     
     if files_delete:
-        cmd_files_del = 'check_command_success rm ' + ' '.join(_f for _f in files_delete)
+        cmd_files_del: str = 'check_command_success rm ' + ' '.join(_f for _f in files_delete)
     else:
-        cmd_files_del = ''
+        cmd_files_del: str = ''
 
 
-    print(f'Command to copy files:')
+    print('Command to copy files:')
     for c in cmds:
         print(f'  {c}')
     
-    print(f'Command to delete files:')
+    print('Command to delete files:')
     print(f'  {cmd_files_del}')
 
     return cmds, cmd_files_del
 #===================================================================================================
 
 #===================================================================================================
-def create_parent_dirs(obj, source, destination):
+def create_parent_dirs(obj: str, source: str, destination: str) -> list[str]:
 
-    check_cmd = 'check_command_success '
-    relpath   = os.path.relpath(obj, source)
-    cmds      = []
+    check_cmd: str = 'check_command_success'
+    relpath  : str = os.path.relpath(obj, source)
+    cmds     : list[str] = []
 
     # check whether the obj is a file or dir
     if os.path.isdir(obj):
         cmds.append(f'{check_cmd} mkdir -p {destination}/{relpath}')
-        obj_final = os.path.dirname(f'{destination}/{relpath}')
+        obj_final: str = os.path.dirname(f'{destination}/{relpath}')
         cmds.append(f'{check_cmd} cp -r {source}/{relpath} {obj_final}')
     
     elif os.path.isfile(obj):
-        dirname                  = os.path.dirname(relpath)
-        file_path_in_destination = f'{destination}/{dirname}'
+        dirname                 : str = os.path.dirname(relpath)
+        file_path_in_destination: str = f'{destination}/{dirname}'
         cmds.append(f'{check_cmd} mkdir -p {file_path_in_destination}')
         cmds.append(f'{check_cmd} cp -r {obj} {file_path_in_destination}')
     
@@ -226,8 +223,8 @@ def get_paths_file(infile):
     paths = []
     with open(infile, 'r') as f:
         lines = f.readlines()
-    for l in lines:
-        paths.append(l.strip('\n'))
+    for line in lines:
+        paths.append(line.strip('\n'))
     return paths
 #===================================================================================================
 
@@ -271,7 +268,7 @@ def copy_output_from_condor(condor_path : str,
     print(f'Creating common path in /eos/: {output_common_path}')
     mkdirp(output_common_path)
 
-    print(f'Looping inside the common path and copying directories to eos')
+    print('Looping inside the common path and copying directories to eos')
     copy_dir(f'{condor_path}', output_common_path)
     return
 #===================================================================================================
