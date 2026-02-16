@@ -18,6 +18,61 @@ JOBFLAVOURS: list[str] = [
 
 
 #===================================================================================================
+def condor_options_parser(parser) -> None:
+    grp = parser.add_argument_group('Condor')
+    grp.add_argument('--flavour'     , type=str, choices=JOBFLAVOURS, help='job flavours / durations')
+    grp.add_argument('--ram'         , type=int, help='amount of ram')
+    grp.add_argument('--cmd'         , type=str, help='Command to execute')
+    grp.add_argument('--no_notify'   , action='store_true', help='Deactivate the notification via set-up in the condor submit files')
+    grp.add_argument('--no_use_dag'  , action='store_true', help='Do not use dags or standalone condor submits')
+    grp.add_argument('--tag'         , type=str, help='tag to add to the condor_submit filename and .sh file')
+    grp.add_argument('--include_dirs', nargs='+', type=str, help='dirs to include when copying to condor. They are inside the path created by the versions in the output')
+    grp.add_argument('--logs_dir'    , type=str, help='Dir to put submits and logs and outputs. They are inside the path created by the versions')
+    return
+#===================================================================================================
+
+#===================================================================================================
+def setup_command(command_list: list[str], replace_exec: str, extra_command: str = ''):
+    
+    # first lets get the executable
+    executable: str = command_list[0].rsplit('/', 1)[-1]
+    executable      = executable.replace(executable[:-3], replace_exec)
+
+
+    cmd_new: str = executable + ' ' + ' '.join(command_list[1:])
+    
+    cmd_new      = cmd_new.replace(' --condor', '')
+    cmd_new      = cmd_new.replace(' --submit', '')
+    cmd_new      = cmd_new.replace(' --no_notify', '')
+    cmd_new      = cmd_new.replace(' --no_use_dag', '')
+
+
+
+    cmd_new      = re.sub(r"\s*--tag(?:\s+[a-zA-Z0-9\_]+)+", '', cmd_new)
+    cmd_new      = re.sub(r"\s*--logs_dir(?:\s+[a-zA-Z0-9\_\/]+)+", '', cmd_new)
+    cmd_new      = re.sub(r"\s*--flavour(?:\s+[a-zA-Z]+)+", '', cmd_new)
+
+    if extra_command:
+        cmd_new += f' {extra_command}'
+    
+    return cmd_new
+#===================================================================================================
+
+#===================================================================================================
+def submit_dag(dagfile: str) -> int:
+    sys.stdout.flush() # keeps print and subprocess output in sync
+
+    dagfile_directory: Path = Path(dagfile).parent
+    dagfile_file     : str  = Path(dagfile).name
+    cmd: str = f'condor_submit_dag -notification Always {dagfile_file}'
+
+    with chdir(dagfile_directory):
+        sc = run(cmd, shell=True)
+
+    return sc.returncode
+#===================================================================================================
+
+#===================================================================================================
 def mkdirp(path):
     if not os.path.exists(path):
         os.makedirs(path)
