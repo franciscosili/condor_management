@@ -103,26 +103,32 @@ class CondorManager:
     # ==============================================================================================
     
     # ==============================================================================================
-    def add_include_exclude_dirs(self, include_exclude_dirs_dict : List[str]) -> None:
-
-        self.include_dirs_cmds = []
-
-        for d in include_exclude_dirs_dict['include']:
+    def add_include_dirs(self, include_dirs: list[tuple[str, str]]) -> None:
+        
+        self.include_dirs_cmds: list[str] = []
+        for d in include_dirs:
             # We have a path with input, and output
-            output_path = os.path.join(self.output_in_condor_path, d[1])
+            output_path: str = os.path.join(self.output_in_condor_path, d[1])
 
             self.include_dirs_cmds += prepare_include_copy_cmd(input_path  = d[0],
                                                                output_path = output_path)
 
-        
-        exclude_dirs_cmds, self.cmds_del = prepare_exclude_copy_cmd(os.getcwd(),
-                                                                    include_exclude_dirs_dict)
-
-        self.include_dirs_cmds += exclude_dirs_cmds
-
         return
     # ==============================================================================================
     
+    # ==============================================================================================
+    def add_exclude_dirs(self, exclude_dirs: list[str]) -> None:
+        
+        include_dirs_cmds, self.cmds_del = prepare_exclude_copy_cmd(os.getcwd(), exclude_dirs)
+
+        if self.include_dirs_cmds:
+            self.include_dirs_cmds += include_dirs_cmds
+        else:
+            self.include_dirs_cmds = include_dirs_cmds
+
+        return
+    # ==============================================================================================
+        
     # ==============================================================================================
     def add_subdir_in_logs(self, subdirname : str) -> str:
         return mkdirp(f'{self.path_submits_logs}/{subdirname}')
@@ -170,12 +176,8 @@ class CondorManager:
         setup_command: str = 'check_command_success source setup.sh'
 
         # modify actual command
-        if self.cpus:
-            cmd += f' --cpus {self.cpus}'
-        
-
         if copy_files:
-            cmd += f' --copy_out_files {self.path_results["local"]}'
+            cmd += f' --copy_output_files_location {self.path_results["local"]}'
             
             if 'remote' in self.path_results:
                 cmd += f' --copy_out_files_remote {self.path_results["remote"]}'
@@ -218,6 +220,7 @@ class CondorManager:
             ('CPUS'        , set_cpu),
             ('RAM'         , set_ram),
             ('FLAVOUR'     , self.flavour),
+            ('NOTIFICATION', 'always' if self.notify else 'never'),
         ])
         # ------------------------------------------------------------------------------------------
         # ------------------------------------------------------------------------------------------
@@ -231,12 +234,12 @@ class CondorManager:
         # ------------------------------------------------------------------------------------------
 
         if reset_files:
-            self.reset_files()
+            self.reset_include_files()
         return
     # ==============================================================================================
     
     # ==============================================================================================
-    def reset_files(self) -> None:
+    def reset_include_files(self) -> None:
         self.include_dirs_cmds.clear()
         return
     # ==============================================================================================

@@ -1,8 +1,12 @@
-import os, sys
+import os
 import glob
-import subprocess
+import re
+import sys
+from subprocess import run
+from pathlib import Path
+from contextlib import chdir
 
-jobflavours = [
+JOBFLAVOURS: list[str] = [
     'espresso',     # 20 minutes
     'microcentury', # 1 hour
     'longlunch',    # 2 hours

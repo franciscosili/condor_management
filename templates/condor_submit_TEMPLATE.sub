@@ -15,7 +15,7 @@ RAM
 
 # the following line is not necessary, only if you want to be notified; why wouldn't you?!
 # when you want to be notified
-notification    =   always
+notification    =   NOTIFICATION
 notify_user     =   francisco.sili@cern.ch
 
 
