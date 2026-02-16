@@ -28,6 +28,8 @@ def condor_options_parser(parser) -> None:
     grp.add_argument('--tag'         , type=str, help='tag to add to the condor_submit filename and .sh file')
     grp.add_argument('--include_dirs', nargs='+', type=str, help='dirs to include when copying to condor. They are inside the path created by the versions in the output')
     grp.add_argument('--logs_dir'    , type=str, help='Dir to put submits and logs and outputs. They are inside the path created by the versions')
+    grp.add_argument('--condor'      , action='store_true', help='Use condor to run.')
+    grp.add_argument('--submit'      , action='store_true', help='Submit condor jobs.')
     return
 #===================================================================================================
 
