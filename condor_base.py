@@ -19,7 +19,7 @@ class CondorManager:
                  ram                     : int = 2,
                  use_dag                 : bool = True,
                  in_afs                  : bool = True,
-                 notify                  : bool = True
+                 notify                  : str  = 'always'
                  ) -> None:
         """
         Class that automatically manages dags, submits, shell files and sets up everything to run with condor.
@@ -47,7 +47,7 @@ class CondorManager:
         self.dag_addon   : str  = 'dags' if self.use_dag else 'standalone'
         
         self.in_afs      : bool = in_afs
-        self.notify      : bool = notify
+        self.notify      : str   = notify
 
         
         
@@ -220,7 +220,7 @@ class CondorManager:
             ('CPUS'        , set_cpu),
             ('RAM'         , set_ram),
             ('FLAVOUR'     , self.flavour),
-            ('NOTIFICATION', 'always' if self.notify else 'never'),
+            ('NOTIFICATION', self.notify),
         ])
         # ------------------------------------------------------------------------------------------
         # ------------------------------------------------------------------------------------------
