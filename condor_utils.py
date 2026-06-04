@@ -53,6 +53,7 @@ def setup_command(command_list: list[str], replace_exec: str, extra_command: str
     cmd_new      = re.sub(r"\s*--logs_dir(?:\s+[a-zA-Z0-9\_\/]+)+", '', cmd_new)
     cmd_new      = re.sub(r"\s*--flavour(?:\s+[a-zA-Z]+)+", '', cmd_new)
     cmd_new      = re.sub(r"\s*--notify(?:\s+[a-zA-Z]+)+", '', cmd_new)
+    cmd_new      = re.sub(r"\s*--ram(?:\s+[0-9]+)+", '', cmd_new)
 
     if extra_command:
         cmd_new += f' {extra_command}'
