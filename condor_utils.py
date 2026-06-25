@@ -4,7 +4,7 @@ import re
 import sys
 from subprocess import run
 from pathlib import Path
-from contextlib import chdir
+from contextlib import contextmanager
 
 JOBFLAVOURS: list[str] = [
     'espresso',     # 20 minutes
@@ -16,6 +16,17 @@ JOBFLAVOURS: list[str] = [
     'nextweek',     # 1 week
 ]
 
+
+#===================================================================================================
+@contextmanager
+def chdir(path):
+    current_dir = os.getcwd()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(current_dir)
+#===================================================================================================
 
 #===================================================================================================
 def condor_options_parser(parser) -> None:
